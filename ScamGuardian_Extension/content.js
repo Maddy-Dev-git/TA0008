@@ -28,24 +28,28 @@ fetch("http://localhost:8000/analyze", {
 });
 
 // 4. Function to Build and Inject the UI Banner
+// 4. Function to Build and Inject the UI Banner
 function injectBanner(label, score, reasons) {
-    // Don't show safe banners on every single website to avoid annoying the user
-    // Only show if it's Caution or Dangerous (or you can force it for the hackathon demo)
-    
     const banner = document.createElement("div");
     banner.className = `scam-guardian-banner ${label.toLowerCase()}`;
     
-    // Format the reasons into a readable string
     const reasonText = reasons.join(" | ");
     
+    // REMOVED the inline onclick="" from the HTML below
     banner.innerHTML = `
         <div>
             <strong>🛡️ AI Scam Guardian [${label.toUpperCase()}]</strong> 
             - Risk Score: ${(score * 100).toFixed(0)}% <br>
             <span style="font-size: 12px; font-weight: normal;">Reasons: ${reasonText}</span>
         </div>
-        <div class="scam-guardian-close" onclick="this.parentElement.remove()">✖</div>
+        <div class="scam-guardian-close">✖</div>
     `;
     
     document.body.prepend(banner);
+
+    // THE FIX: Add the event listener securely through JavaScript
+    const closeButton = banner.querySelector('.scam-guardian-close');
+    closeButton.addEventListener('click', () => {
+        banner.remove();
+    });
 }
