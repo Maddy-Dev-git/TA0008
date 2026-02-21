@@ -4,14 +4,13 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, Text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 import datetime
 
-# --- 1. DATABASE SETUP (SQLAlchemy + SQLite) ---
-# check_same_thread=False is required for SQLite in FastAPI
+
 SQLALCHEMY_DATABASE_URL = "sqlite:///./scamguard.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# --- 2. SQL MODELS (Database Tables) ---
+
 class ScamReport(Base):
     __tablename__ = "scam_reports"
     
@@ -23,10 +22,10 @@ class ScamReport(Base):
     reasons = Column(String)    # Stored as comma-separated string
     timestamp = Column(String, default=lambda: datetime.datetime.now().isoformat())
 
-# Hackathon Trick: Automatically create tables on startup if they don't exist
+
 Base.metadata.create_all(bind=engine)
 
-# --- 3. PYDANTIC SCHEMAS (API Input/Output Validation) ---
+
 class AnalyzeRequest(BaseModel):
     url: str = ""
     message_text: str = ""
@@ -37,10 +36,10 @@ class AnalyzeResponse(BaseModel):
     reasons: list[str]
     report_id: int
 
-# --- 4. FASTAPI APP INITIATION ---
+
 app = FastAPI(title="AI Scam Guardian API")
 
-# Dependency to get DB session per request
+
 def get_db():
     db = SessionLocal()
     try:
@@ -48,7 +47,7 @@ def get_db():
     finally:
         db.close()
 
-# --- 5. DETECTION LOGIC (Phase 1 Rule-Based Engine) ---
+
 def calculate_risk(url: str, text: str):
     score = 0.0
     reasons = []
@@ -56,7 +55,7 @@ def calculate_risk(url: str, text: str):
     url_lower = url.lower()
     text_lower = text.lower()
 
-    # URL Check Logic
+   
     suspicious_url_words = ["login", "verify", "bank", "otp", "update", "secure"]
     if any(word in url_lower for word in suspicious_url_words):
         score += 0.3
@@ -66,16 +65,16 @@ def calculate_risk(url: str, text: str):
         score += 0.3
         reasons.append("Suspicious Top-Level Domain (TLD).")
 
-    # Text/Hinglish Logic
+   
     suspicious_text_words = ["urgent", "send money", "click now", "paisa bhejo", "account block", "turant", "lottery"]
     if any(word in text_lower for word in suspicious_text_words):
         score += 0.4
         reasons.append("High-risk urgency/money keywords found in text.")
 
-    # Cap score at 1.0
+    
     score = min(score, 1.0)
     
-    # Assign Label
+   
     if score < 0.3:
         label = "Safe"
     elif score < 0.7:
@@ -88,13 +87,13 @@ def calculate_risk(url: str, text: str):
         
     return score, label, reasons
 
-# --- 6. API ENDPOINTS ---
+
 @app.post("/analyze", response_model=AnalyzeResponse)
 def analyze_scam(request: AnalyzeRequest, db: Session = Depends(get_db)):
-    # 1. Run the brain
+   
     score, label, reasons = calculate_risk(request.url, request.message_text)
     
-    # 2. Log into SQLite Database
+   
     new_report = ScamReport(
         url=request.url,
         message_text=request.message_text,
@@ -106,7 +105,7 @@ def analyze_scam(request: AnalyzeRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_report) # Get the generated ID
     
-    # 3. Return JSON to the Browser Extension
+   
     return AnalyzeResponse(
         risk_score=score,
         risk_label=label,
