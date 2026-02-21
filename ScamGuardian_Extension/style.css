@@ -1,0 +1,26 @@
+.scam-guardian-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px 20px;
+    z-index: 2147483647; /* Maximum z-index so nothing covers it */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.scam-guardian-banner.safe { background-color: #00b894; }
+.scam-guardian-banner.caution { background-color: #fdcb6e; color: #2d3436; }
+.scam-guardian-banner.dangerous { background-color: #d63031; }
+
+.scam-guardian-close {
+    cursor: pointer;
+    font-size: 20px;
+    margin-left: 20px;
+}
